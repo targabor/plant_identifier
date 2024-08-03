@@ -1,6 +1,8 @@
 import streamlit as st
 import requests
 import json
+import os
+from openai import AzureOpenAI
 
 def upload_image():
     st.header("Upload an Image")
@@ -34,8 +36,53 @@ def get_plant_name(input_picture):
     response = s.send(prepared)
     json_result = json.loads(response.text)
 
-    st.write(json_result['results'][0])
+    try:
+        specie = json_result['results'][0]['species']['commonNames'][0]
+    except Exception as e:
+        specie = None
+    
+    return specie
 
+def openai_query(plant_name: str) -> str:
+        # Set up OpenAI Client
+        openai_api_key = st.secrets["azure"]["AZURE_OPENAI_API_KEY"]
+        openai_endpoint = st.secrets["azure"]["AZURE_OPENAI_ENDPOINT"]
+        openai_api_version = st.secrets["azure"]["API_VERSION"]
+        client = AzureOpenAI(
+            azure_endpoint=openai_endpoint,
+            api_version=openai_api_version,
+            api_key=openai_api_key
+            )
+
+        deployment_name=st.secrets["azure"]["AZURE_DEPLOYMENT"]
+
+        print('Sending a test completion job')
+        prompt = f"""
+        I have a plant of species {plant_name}. Can you provide me with detailed care instructions for this plant? I'm interested in information on:
+        1. **Light Requirements:** How much sunlight does it need?
+        2. **Watering Needs:** How often should I water it, and are there any signs of overwatering or underwatering to look out for?
+        3. **Soil and Fertilizer:** What type of soil is best, and how often should I fertilize it?
+        4. **Temperature and Humidity:** What are the ideal temperature and humidity conditions for this plant?
+        5. **Pest and Disease Control:** Are there common pests or diseases that affect this plant, and how can I manage them?
+        Answer in bulletpoints, 2 sentence per bulletpoints, bulletpoints only.
+        Use indicative mode. Don't include code or dialogs.
+        """
+        response = client.chat.completions.create(
+            model=deployment_name,
+            messages=[
+                {
+                    "role": "user",
+                    "content": prompt
+                }
+            ]
+            )
+        # print(prompt)
+        # print("------RESPONSE-------")
+        # print(response.to_dict()["choices"][0]["message"]["content"])
+        return response.to_dict()["choices"][0]["message"]["content"]
+
+
+    
 
 if __name__ == "__main__":
 
@@ -62,4 +109,9 @@ if __name__ == "__main__":
 
     if st.button("Identify"):
         plant_name = get_plant_name(picture)
-        st.header(plant_name)
+        if plant_name: 
+            st.header(plant_name)
+            description = openai_query(plant_name)
+            st.write(description)
+        else:
+            st.write("The object on the image cannot be identified. Try again with a different picture.")
