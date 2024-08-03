@@ -64,7 +64,7 @@ def openai_query(plant_name: str) -> str:
         3. **Soil and Fertilizer:** What type of soil is best, and how often should I fertilize it?
         4. **Temperature and Humidity:** What are the ideal temperature and humidity conditions for this plant?
         5. **Pest and Disease Control:** Are there common pests or diseases that affect this plant, and how can I manage them?
-        Answer in bulletpoints, 2 sentence per bulletpoints, bulletpoints only.
+        Answer in bulletpoints, 2 sentence per bulletpoints, bulletpoints only, add one emoji for each bulletpoint.
         Use indicative mode. Don't include code or dialogs.
         """
         response = client.chat.completions.create(
@@ -114,4 +114,4 @@ if __name__ == "__main__":
             description = openai_query(plant_name)
             st.write(description)
         else:
-            st.write("The object on the image cannot be identified. Try again with a different picture.")
+            st.write("no luck this time🤔")
