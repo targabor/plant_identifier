@@ -108,7 +108,6 @@ if __name__ == "__main__":
         st.image(picture, caption='Plant to be searched for', use_column_width=True)
 
     if st.button("Identify"):
-        st.write("asd")
         plant_name = get_plant_name(picture)
         if plant_name: 
             st.header(plant_name)
